@@ -1,5 +1,6 @@
-zig-out/
-build/
-zig-cache/
-zig
-lib/
+*~
+*.swp
+
+.zig-cache
+zig-out
+build
