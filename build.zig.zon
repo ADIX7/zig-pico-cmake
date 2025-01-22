@@ -1,0 +1,10 @@
+.{
+    .name = "pico_sdk",
+    .version = "0.1.0",
+    .paths = .{
+        "src/picosdk.zig",
+        "CMakeLists.txt",
+        "LICENSE",
+        "Readme.md",
+    },
+}

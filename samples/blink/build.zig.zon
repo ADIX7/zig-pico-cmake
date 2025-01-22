@@ -1,0 +1,10 @@
+.{
+    .name = "blink",
+    .version = "0.0.1",
+    .dependencies = .{
+        .pico_sdk = .{
+            .path = "deps/zig-pico-cmake",
+        },
+    },
+    .paths = .{""},
+}
