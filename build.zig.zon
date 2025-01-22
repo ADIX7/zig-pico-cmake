@@ -2,8 +2,11 @@
     .name = "pico_sdk",
     .version = "0.1.0",
     .paths = .{
+        "build.zig",
         "src/picosdk.zig",
         "CMakeLists.txt",
+        "config/lwipopts.h",
+        "config/pico/version.h",
         "LICENSE",
         "Readme.md",
     },
