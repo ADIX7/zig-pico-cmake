@@ -70,6 +70,11 @@ Copy samples/blink/setup_pico_app.sh to this directory, and run this file by bel
 . setup_pico_app.sh -p 12205f264d4c80458d720071b88a3af6202e342783df0499896290a87f904467f4af
 ```
 
+Before build a pico application, you must set PICO_SDK_PATH environment variable.
+```bash
+export PICO_SDK_PATH=~/Software/pico-sdk
+```
+
 Build a pico application by bellow command.
 ```bash
 zig build
