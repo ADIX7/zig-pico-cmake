@@ -11,7 +11,7 @@ Or use build.zig.zon file to install this package, add url of this package into 
     .dependencies = .{
         .pico_sdk = .{
             .url = "git+https://github.com/flyfish30/zig-pico-cmake.git",
-            .hash = "12205f264d4c80458d720071b88a3af6202e342783df0499896290a87f904467f4af",
+            .hash = "122041ae8e3a3078d32dd11780dc58015876a92bd241bb15014cbbbe64789a801db4",
         },
     },
 ```
@@ -44,8 +44,7 @@ pub fn build(b: *std.Build) anyerror!void {
     const target = try pico.getCrossTarget(pico_platform);
     const optimize = b.standardOptimizeOption(.{});
 
-    // Modify to addStaticLibrary for large project
-    const lib = b.addObject(.{
+    const lib = b.addStaticLibrary(.{
         .name = "zig-pico",
         .root_source_file = b.path("src/main.zig"),
         .target = std.Build.resolveTargetQuery(b, target),
@@ -56,6 +55,8 @@ pub fn build(b: *std.Build) anyerror!void {
         .app_name = comptime proj_name,
         .app_lib = lib,
         .board = board,
+        // additional pico libs for application, it is none in blink application
+        .pico_libs = "",
     };
 
     std.log.info("Begin build app\n", .{});
@@ -67,7 +68,7 @@ Add a build.zig.zon file, add url of zig-pico-cmake to dependencies.
 
 Copy samples/blink/setup_pico_app.sh to this directory, and run this file by bellow command.
 ```bash
-. setup_pico_app.sh -p 12205f264d4c80458d720071b88a3af6202e342783df0499896290a87f904467f4af
+. setup_pico_app.sh -p 122041ae8e3a3078d32dd11780dc58015876a92bd241bb15014cbbbe64789a801db4
 ```
 
 Before build a pico application, you must set PICO_SDK_PATH environment variable.

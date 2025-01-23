@@ -17,7 +17,7 @@ if (STDIO_UART)
 endif()
 
 # Adjust libraries as needed
-target_link_libraries(${PROJ_NAME} pico_stdlib pico_cyw43_arch_none ${CMAKE_SOURCE_DIR}/zig-out/${PROJ_NAME}.o)
+target_link_libraries(${PROJ_NAME} ${APP_PICO_LIBS} ${CMAKE_SOURCE_DIR}/zig-out/${PROJ_NAME}.a)
 
 # Generate binary
 pico_add_extra_outputs(${PROJ_NAME})
