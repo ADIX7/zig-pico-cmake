@@ -11,7 +11,7 @@ Or use build.zig.zon file to install this package, add url of this package into 
     .dependencies = .{
         .pico_sdk = .{
             .url = "git+https://github.com/flyfish30/zig-pico-cmake.git",
-            .hash = "122041ae8e3a3078d32dd11780dc58015876a92bd241bb15014cbbbe64789a801db4",
+            .hash = "1220878cc4412efcfb67255b5182e6c7a8d53c86f4d3acaec6ae3e78b88f80dc7706",
         },
     },
 ```
@@ -68,7 +68,7 @@ Add a build.zig.zon file, add url of zig-pico-cmake to dependencies.
 
 Copy samples/blink/setup_pico_app.sh to this directory, and run this file by bellow command.
 ```bash
-. setup_pico_app.sh -p 122041ae8e3a3078d32dd11780dc58015876a92bd241bb15014cbbbe64789a801db4
+. setup_pico_app.sh -p 1220878cc4412efcfb67255b5182e6c7a8d53c86f4d3acaec6ae3e78b88f80dc7706
 ```
 
 Before build a pico application, you must set PICO_SDK_PATH environment variable.

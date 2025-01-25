@@ -58,7 +58,7 @@ pub const PicoAppOption = struct {
     /// board information
     board: Board,
     /// additional pico-sdk libs should be linked into application
-    /// the name of library is seprated by ";", for example "pico_lib_aa;pico_lib_bb".
+    /// the name of library is separated by ";", for example "pico_lib_aa;pico_lib_bb".
     pico_libs: []const u8,
 };
 
@@ -175,9 +175,9 @@ fn getSocExcludeDirs(comptime pico_soc: SocType) [std.meta.fields(SocType).len -
 pub fn addPicoApp(b: *std.Build, option: PicoAppOption) !*std.Build.Step {
     const host_os_tag = builtin.target.os.tag;
     const app_lib = option.app_lib;
-    const board_name, const pico_platform = switch (option.board) {
-        .pico, .pico2 => |board| .{ board.board_name, board.pico_platform },
-        .pico_w, .pico2_w => |board| .{ board.board_name, board.pico_platform },
+    const board_name, const pico_platform, const stdio_type = switch (option.board) {
+        .pico, .pico2 => |board| .{ board.board_name, board.pico_platform, board.stdio_type },
+        .pico_w, .pico2_w => |board| .{ board.board_name, board.pico_platform, board.stdio_type },
     };
     const has_wifi, const cyw43_arch = switch (option.board) {
         .pico, .pico2 => .{ false, null },
@@ -191,14 +191,12 @@ pub fn addPicoApp(b: *std.Build, option: PicoAppOption) !*std.Build.Step {
     // Check if is pico soc: RP2040 or RP2350 -- This includes a specific header file.
     const IsPicoSoc = true;
 
-    // Choose whether Stdio goes to USB or UART
-    const StdioUsb = true;
     const PicoSocDefine = switch (option.board) {
         .pico, .pico_w => "PICO_RP2040",
         .pico2, .pico2_w => "PICO_RP2350",
     };
 
-    const PicoStdlibDefine = if (StdioUsb) "LIB_PICO_STDIO_USB" else "LIB_PICO_STDIO_UART";
+    const PicoStdlibDefine = if (stdio_type == .usb) "LIB_PICO_STDIO_USB" else "LIB_PICO_STDIO_UART";
 
     // get and perform basic verification on the pico sdk path
     // if the sdk path contains the pico_sdk_init.cmake file then we know its correct
@@ -352,7 +350,7 @@ pub fn addPicoApp(b: *std.Build, option: PicoAppOption) !*std.Build.Step {
     defer b.allocator.free(platform_def_str);
     const proj_name_str = try std.fmt.allocPrint(b.allocator, "-DPROJ_NAME={s}", .{option.app_name});
     defer b.allocator.free(proj_name_str);
-    const uart_or_usb = if (StdioUsb) "-DSTDIO_USB=1" else "-DSTDIO_UART=1";
+    const uart_or_usb = if (stdio_type == .usb) "-DSTDIO_USB=1" else "-DSTDIO_UART=1";
     const cmake_pico_sdk_path = b.fmt("-DPICO_SDK_PATH={s}", .{pico_sdk_path});
     const app_pico_libs_def = if (has_wifi)
         try std.fmt.allocPrint(b.allocator, "-DAPP_PICO_LIBS=pico_stdlib;pico_cyw43_arch_none;{s}", .{option.pico_libs})
