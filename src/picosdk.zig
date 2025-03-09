@@ -144,7 +144,7 @@ pub fn getCrossTarget(platform: []const u8) !std.Target.Query {
         std.log.err("Can not support pico platform: {s}", .{platform});
         return error.NotSupported;
     };
-    return std.zig.CrossTarget{
+    return std.Target.Query{
         .abi = .eabi,
         .cpu_arch = .thumb,
         .cpu_model = .{ .explicit = cpu_model },

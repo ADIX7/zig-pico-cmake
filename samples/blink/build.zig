@@ -23,7 +23,7 @@ pub fn build(b: *std.Build) anyerror!void {
         .optimize = optimize,
     });
 
-    const option = .{
+    const option = pico.PicoAppOption{
         .app_name = comptime proj_name,
         .app_lib = lib,
         .board = board,

@@ -1,6 +1,8 @@
 .{
-    .name = "pico_sdk",
-    .version = "0.1.0",
+    .name = .pico_sdk,
+    .version = "0.2.0",
+    .fingerprint = 0x5c760529913552d0,
+    .minium_zig_version = "0,14.0",
     .paths = .{
         "build.zig",
         "src/picosdk.zig",

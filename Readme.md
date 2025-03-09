@@ -11,7 +11,7 @@ Or use build.zig.zon file to install this package, add url of this package into 
     .dependencies = .{
         .pico_sdk = .{
             .url = "git+https://github.com/flyfish30/zig-pico-cmake.git",
-            .hash = "1220878cc4412efcfb67255b5182e6c7a8d53c86f4d3acaec6ae3e78b88f80dc7706",
+            .hash = "pico_sdk-0.2.0-0FI1kRVcAAAm7FALjQqqWr7U82H6dk4Y_G0xypk0SLJe",
         },
     },
 ```
