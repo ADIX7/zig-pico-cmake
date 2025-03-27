@@ -254,7 +254,7 @@ pub fn addPicoApp(b: *std.Build, option: PicoAppOption) !*std.Build.Step {
     // find the board header
     const board_header = blk: {
         const boards_directory_path = b.pathJoin(&.{ pico_sdk_path, "src/boards/include/boards/" });
-        var boards_dir = try std.fs.cwd().openDir(boards_directory_path, .{});
+        var boards_dir = try std.fs.cwd().openDir(boards_directory_path, .{.iterate = true});
         defer boards_dir.close();
 
         var it = boards_dir.iterate();
@@ -293,6 +293,7 @@ pub fn addPicoApp(b: *std.Build, option: PicoAppOption) !*std.Build.Step {
         const pico_sdk_src = try std.fmt.allocPrint(b.allocator, "{s}/src", .{pico_sdk_path});
         var dir = try std.fs.cwd().openDir(pico_sdk_src, .{
             .no_follow = true,
+            .iterate = true
         });
         var walker = try dir.walk(b.allocator);
         defer walker.deinit();
@@ -301,6 +302,7 @@ pub fn addPicoApp(b: *std.Build, option: PicoAppOption) !*std.Build.Step {
                 if (!(std.mem.containsAtLeast(u8, entry.path, 1, "host") or
                     isContainExcludeDir(entry.path, @constCast(&soc_exclude_dirs))))
                 {
+                    std.debug.print("Adding header file {s}\n", .{entry.path});
                     const pico_sdk_include = try std.fmt.allocPrint(b.allocator, "{s}/src/{s}", .{ pico_sdk_path, entry.path });
                     app_lib.addIncludePath(.{ .cwd_relative = pico_sdk_include });
                 }
