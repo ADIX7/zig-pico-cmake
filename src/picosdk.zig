@@ -154,6 +154,7 @@ pub fn getCrossTarget(platform: []const u8) !std.Target.Query {
 
 // Pico SDK path can be specified here for your convenience
 const PicoSDKPath: ?[]const u8 = null;
+const PicoExtrasPath: ?[]const u8 = null;
 
 // arm-none-eabi toolchain path may be specified here as well
 const ARMNoneEabiPath: ?[]const u8 = null;
@@ -208,6 +209,11 @@ pub fn addPicoApp(b: *std.Build, option: PicoAppOption) !*std.Build.Step {
             return error.NoPicoSdkPath;
         };
 
+    const pico_extras_path: ?[]u8 = if (PicoExtrasPath) |extras_path|
+        extras_path
+    else
+        std.process.getEnvVarOwned(b.allocator, "PICO_EXTRAS_PATH") catch null;
+
     const pico_init_cmake_path = b.pathJoin(&.{ pico_sdk_path, "pico_sdk_init.cmake" });
     std.fs.cwd().access(pico_init_cmake_path, .{}) catch {
         std.log.err(
@@ -215,13 +221,13 @@ pub fn addPicoApp(b: *std.Build, option: PicoAppOption) !*std.Build.Step {
             \\Tried: {s}
             \\Are you sure you entered the path correctly?
         , .{pico_init_cmake_path});
-        return error.InvlidPicoSdkPath;
+        return error.InvalidPicoSdkPath;
     };
 
     // default arm-none-eabi includes
     app_lib.linkLibC();
 
-    // Standard libary headers may be in different locations on different platforms
+    // Standard library headers may be in different locations on different platforms
     const arm_header_location = blk: {
         if (ARMNoneEabiPath) |path| {
             break :blk path;
@@ -254,7 +260,7 @@ pub fn addPicoApp(b: *std.Build, option: PicoAppOption) !*std.Build.Step {
     // find the board header
     const board_header = blk: {
         const boards_directory_path = b.pathJoin(&.{ pico_sdk_path, "src/boards/include/boards/" });
-        var boards_dir = try std.fs.cwd().openDir(boards_directory_path, .{.iterate = true});
+        var boards_dir = try std.fs.cwd().openDir(boards_directory_path, .{ .iterate = true });
         defer boards_dir.close();
 
         var it = boards_dir.iterate();
@@ -291,10 +297,7 @@ pub fn addPicoApp(b: *std.Build, option: PicoAppOption) !*std.Build.Step {
     // Find all folders called include in the Pico SDK
     {
         const pico_sdk_src = try std.fmt.allocPrint(b.allocator, "{s}/src", .{pico_sdk_path});
-        var dir = try std.fs.cwd().openDir(pico_sdk_src, .{
-            .no_follow = true,
-            .iterate = true
-        });
+        var dir = try std.fs.cwd().openDir(pico_sdk_src, .{ .no_follow = true, .iterate = true });
         var walker = try dir.walk(b.allocator);
         defer walker.deinit();
         while (try walker.next()) |entry| {
@@ -304,6 +307,26 @@ pub fn addPicoApp(b: *std.Build, option: PicoAppOption) !*std.Build.Step {
                 {
                     std.debug.print("Adding header file {s}\n", .{entry.path});
                     const pico_sdk_include = try std.fmt.allocPrint(b.allocator, "{s}/src/{s}", .{ pico_sdk_path, entry.path });
+                    app_lib.addIncludePath(.{ .cwd_relative = pico_sdk_include });
+                }
+            }
+        }
+    }
+
+    // PICO EXTRAS includes
+    // Find all folders called include in the Pico EXTRAS
+    if (pico_extras_path) |extra_path| {
+        const pico_extras_src = try std.fmt.allocPrint(b.allocator, "{s}/src", .{extra_path});
+        var dir = try std.fs.cwd().openDir(pico_extras_src, .{ .no_follow = true, .iterate = true });
+        var walker = try dir.walk(b.allocator);
+        defer walker.deinit();
+        while (try walker.next()) |entry| {
+            if (std.mem.eql(u8, entry.basename, "include")) {
+                if (!(std.mem.containsAtLeast(u8, entry.path, 1, "host") or
+                    isContainExcludeDir(entry.path, @constCast(&soc_exclude_dirs))))
+                {
+                    std.debug.print("Adding header file {s}\n", .{entry.path});
+                    const pico_sdk_include = try std.fmt.allocPrint(b.allocator, "{s}/src/{s}", .{ extra_path, entry.path });
                     app_lib.addIncludePath(.{ .cwd_relative = pico_sdk_include });
                 }
             }
@@ -354,13 +377,18 @@ pub fn addPicoApp(b: *std.Build, option: PicoAppOption) !*std.Build.Step {
     defer b.allocator.free(proj_name_str);
     const uart_or_usb = if (stdio_type == .usb) "-DSTDIO_USB=1" else "-DSTDIO_UART=1";
     const cmake_pico_sdk_path = b.fmt("-DPICO_SDK_PATH={s}", .{pico_sdk_path});
+    if (pico_extras_path) |extra_path| {
+        std.log.info("Adding PICO_EXTRAS_PATH {s}", .{extra_path});
+    }
+    const cmake_pico_extras_path = if (pico_extras_path) |extra_path| b.fmt("-DPICO_EXTRAS_PATH={s}", .{extra_path}) else "";
+
     const app_pico_libs_def = if (has_wifi)
         try std.fmt.allocPrint(b.allocator, "-DAPP_PICO_LIBS=pico_stdlib;pico_cyw43_arch_none;{s}", .{option.pico_libs})
     else
         try std.fmt.allocPrint(b.allocator, "-DAPP_PICO_LIBS=pico_stdlib;{s}", .{option.pico_libs});
     defer b.allocator.free(app_pico_libs_def);
     const cmake_argv = [_][]const u8{
-        "cmake", "-B", "./build", "-S .", proj_name_str, cmake_pico_sdk_path, uart_or_usb, board_def_str, platform_def_str, app_pico_libs_def,
+        "cmake", "-B", "./build", "-S .", proj_name_str, cmake_pico_sdk_path, cmake_pico_extras_path, uart_or_usb, board_def_str, platform_def_str, app_pico_libs_def,
     };
     const cmake_step = b.addSystemCommand(&cmake_argv);
     cmake_step.step.dependOn(&install_step.step);
